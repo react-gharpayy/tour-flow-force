@@ -26,7 +26,7 @@ const App = () => (
         <BrowserRouter>
           <div className="flex min-h-screen w-full bg-background">
             <AppSidebar />
-            <main className="flex-1 overflow-auto p-6">
+            <main className="flex-1 overflow-auto pt-14 pb-16 md:pt-0 md:pb-0 px-3 py-4 md:p-6">
               <Routes>
                 <Route path="/" element={<HRTower />} />
                 <Route path="/team" element={<TeamPerformance />} />
