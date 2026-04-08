@@ -24,13 +24,13 @@ const textMap = {
 
 export function MetricCard({ label, value, subtext, color = 'blue', icon }: MetricCardProps) {
   return (
-    <div className={cn('glass-card p-4 animate-slide-up', glowMap[color])}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
-        {icon && <span className={cn('opacity-60', textMap[color])}>{icon}</span>}
+    <div className={cn('glass-card p-3 md:p-4 animate-slide-up', glowMap[color])}>
+      <div className="flex items-center justify-between mb-1 md:mb-2">
+        <span className="text-[10px] md:text-xs font-medium text-muted-foreground uppercase tracking-wider leading-tight">{label}</span>
+        {icon && <span className={cn('opacity-60 hidden sm:block', textMap[color])}>{icon}</span>}
       </div>
-      <div className={cn('text-2xl font-heading font-bold', textMap[color])}>{value}</div>
-      {subtext && <p className="text-xs text-muted-foreground mt-1">{subtext}</p>}
+      <div className={cn('text-xl md:text-2xl font-heading font-bold', textMap[color])}>{value}</div>
+      {subtext && <p className="text-[10px] md:text-xs text-muted-foreground mt-1">{subtext}</p>}
     </div>
   );
 }

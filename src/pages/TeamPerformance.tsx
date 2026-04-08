@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useAppState } from '@/lib/app-context';
 import { getMemberPerformance, zones } from '@/lib/mock-data';
 import { DateRangeToggle } from '@/components/DateRangeToggle';
+import { StatusBadge, OutcomeBadge } from '@/components/StatusBadge';
 import { DateRange, MemberPerformance } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { StatusBadge, OutcomeBadge } from '@/components/StatusBadge';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 export default function TeamPerformance() {
@@ -36,25 +36,63 @@ export default function TeamPerformance() {
   };
 
   return (
-    <div className="space-y-6 animate-slide-up">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-heading font-bold text-foreground">Team Performance</h1>
-        <div className="flex items-center gap-3">
+    <div className="space-y-4 md:space-y-6 animate-slide-up">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">Team Performance</h1>
+        <div className="flex items-center gap-2 flex-wrap">
           <select
             value={filterZone}
             onChange={e => setFilterZone(e.target.value)}
-            className="bg-surface-2 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground"
+            className="bg-surface-2 border border-border rounded-lg px-2 py-1.5 text-xs text-foreground"
           >
             <option value="all">All Zones</option>
-            {zones.map(z => (
-              <option key={z.id} value={z.area}>{z.area}</option>
-            ))}
+            {zones.map(z => <option key={z.id} value={z.area}>{z.area}</option>)}
           </select>
           <DateRangeToggle value={dateRange} onChange={setDateRange} />
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {sorted.map(m => (
+          <div
+            key={m.memberId}
+            onClick={() => setSelectedMember(m.memberId === selectedMember ? null : m.memberId)}
+            className="glass-card p-3 cursor-pointer active:scale-[0.99] transition-transform"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <span className="font-medium text-foreground text-sm">{m.name}</span>
+                <span className={cn('ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded-full', m.role === 'flow-ops' ? 'bg-flow-ops/15 text-role-flow' : 'bg-tcm/15 text-role-tcm')}>
+                  {m.role === 'flow-ops' ? 'FO' : 'TCM'}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">{m.zoneName.split(' — ')[1]}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2 text-center">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Tours</p>
+                <p className="text-sm font-medium text-foreground">{m.toursScheduled}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Done</p>
+                <p className="text-sm font-medium text-foreground">{m.toursCompleted}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Show%</p>
+                <p className={cn('text-sm font-medium', m.showUpRate >= 70 ? 'text-role-tcm' : m.showUpRate >= 50 ? 'text-role-hr' : 'text-danger')}>{m.showUpRate}%</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Drafts</p>
+                <p className="text-sm font-medium text-role-hr">{m.drafts}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block glass-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -87,9 +125,7 @@ export default function TeamPerformance() {
                   <td className="py-2.5 px-2 text-center text-muted-foreground">{m.leadsAdded}</td>
                   <td className="py-2.5 px-2 text-center text-muted-foreground">{m.toursScheduled}</td>
                   <td className="py-2.5 px-2 text-center text-muted-foreground">{m.toursCompleted}</td>
-                  <td className={cn('py-2.5 px-2 text-center font-medium', m.showUpRate >= 70 ? 'text-role-tcm' : m.showUpRate >= 50 ? 'text-role-hr' : 'text-danger')}>
-                    {m.showUpRate}%
-                  </td>
+                  <td className={cn('py-2.5 px-2 text-center font-medium', m.showUpRate >= 70 ? 'text-role-tcm' : m.showUpRate >= 50 ? 'text-role-hr' : 'text-danger')}>{m.showUpRate}%</td>
                   <td className="py-2.5 px-2 text-center text-role-hr font-medium">{m.drafts}</td>
                   <td className="py-2.5 px-2 text-center text-muted-foreground">{m.sameDayRate}%</td>
                 </tr>
@@ -99,18 +135,34 @@ export default function TeamPerformance() {
         </div>
       </div>
 
-      {/* Member Tour History Drawer */}
+      {/* Member Tour History */}
       {selectedMember && (
-        <div className="glass-card p-5 animate-slide-up">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-semibold text-foreground">
-              Tour History — {sorted.find(m => m.memberId === selectedMember)?.name}
+        <div className="glass-card p-3 md:p-5 animate-slide-up">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-heading font-semibold text-sm text-foreground">
+              {sorted.find(m => m.memberId === selectedMember)?.name} — History
             </h3>
             <button onClick={() => setSelectedMember(null)} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="space-y-2 md:hidden">
+            {memberTours.map(t => (
+              <div key={t.id} className="bg-surface-2/50 rounded-lg p-3 space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-foreground font-medium">{t.leadName}</span>
+                  <span className="text-muted-foreground">{t.tourDate} {t.tourTime}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">{t.propertyName}</p>
+                <div className="flex gap-2">
+                  <StatusBadge status={t.status} />
+                  <OutcomeBadge outcome={t.outcome} />
+                </div>
+              </div>
+            ))}
+            {memberTours.length === 0 && <p className="text-center text-muted-foreground text-sm py-4">No tours found</p>}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-muted-foreground">
@@ -135,9 +187,6 @@ export default function TeamPerformance() {
                     <td className="py-2 text-muted-foreground text-xs">{t.remarks || '—'}</td>
                   </tr>
                 ))}
-                {memberTours.length === 0 && (
-                  <tr><td colSpan={7} className="py-8 text-center text-muted-foreground">No tours found</td></tr>
-                )}
               </tbody>
             </table>
           </div>
