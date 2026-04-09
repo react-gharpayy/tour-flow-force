@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function TCMDashboard() {
-  const { tours, setTours } = useAppState();
+  const { tours, setTours, currentMemberId } = useAppState();
   const [, setTick] = useState(0);
 
   useEffect(() => {
@@ -18,7 +18,9 @@ export default function TCMDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const myTours = tours.filter(t => t.assignedTo === 'm5' || t.assignedTo === 'm6');
+  const myTours = currentMemberId
+    ? tours.filter(t => t.assignedTo === currentMemberId)
+    : tours.filter(t => t.assignedTo === 'm5' || t.assignedTo === 'm6');
   const todayTours = myTours.sort((a, b) => a.tourTime.localeCompare(b.tourTime));
   const completed = myTours.filter(t => t.status === 'completed').length;
   const showUps = myTours.filter(t => t.showUp === true).length;
@@ -41,7 +43,9 @@ export default function TCMDashboard() {
     <div className="space-y-4 md:space-y-6 animate-slide-up">
       <div>
         <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">Today's Tours</h1>
-        <p className="text-xs text-muted-foreground">Your execution panel</p>
+        <p className="text-xs text-muted-foreground">
+          {currentMemberId ? 'Your execution panel' : 'Select yourself in the header ↑'}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
@@ -51,7 +55,6 @@ export default function TCMDashboard() {
         <MetricCard label="Drafts" value={drafts} color="amber" icon={<FileText className="h-4 w-4" />} />
       </div>
 
-      {/* Upcoming */}
       {upcoming.length > 0 && (
         <div className="glass-card p-3 md:p-5 border-primary/30">
           <div className="flex items-center gap-2 mb-2">
@@ -67,7 +70,7 @@ export default function TCMDashboard() {
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <Button size="sm" onClick={() => updateTour(t.id, { status: 'confirmed' })} className="h-8 text-xs">Confirm</Button>
-                  <button className="p-2 rounded-md bg-primary/10 text-primary"><Phone className="h-3.5 w-3.5" /></button>
+                  <a href={`tel:${t.phone}`} className="p-2 rounded-md bg-primary/10 text-primary"><Phone className="h-3.5 w-3.5" /></a>
                 </div>
               </div>
             ))}
@@ -75,7 +78,6 @@ export default function TCMDashboard() {
         </div>
       )}
 
-      {/* Needs Outcome */}
       {needsAction.length > 0 && (
         <div className="glass-card p-3 md:p-5 border-hr/30">
           <div className="flex items-center gap-2 mb-2">
@@ -90,11 +92,8 @@ export default function TCMDashboard() {
         </div>
       )}
 
-      {/* Full Schedule */}
       <div className="glass-card p-3 md:p-5">
         <h3 className="font-heading font-semibold text-xs md:text-sm mb-3 text-foreground">Full Schedule</h3>
-        
-        {/* Mobile cards */}
         <div className="md:hidden space-y-2">
           {todayTours.map(t => (
             <div key={t.id} className="bg-surface-2/50 rounded-lg p-3">
@@ -124,8 +123,6 @@ export default function TCMDashboard() {
             </div>
           ))}
         </div>
-
-        {/* Desktop table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

@@ -3,8 +3,10 @@ import { Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function TCMActions() {
-  const { tours, setTours } = useAppState();
-  const myTours = tours.filter(t => t.assignedTo === 'm5' || t.assignedTo === 'm6');
+  const { tours, setTours, currentMemberId } = useAppState();
+  const myTours = currentMemberId
+    ? tours.filter(t => t.assignedTo === currentMemberId)
+    : tours.filter(t => t.assignedTo === 'm5' || t.assignedTo === 'm6');
 
   const toConfirm = myTours.filter(t => t.status === 'scheduled');
   const missed = myTours.filter(t => t.status === 'no-show');
@@ -30,7 +32,7 @@ export default function TCMActions() {
       <Section title="❌ Missed — Follow Up" count={missed.length} color="text-danger">
         {missed.map(t => (
           <ActionCard key={t.id} tour={t}>
-            <button className="p-2 rounded-md bg-danger/10 text-danger"><Phone className="h-3.5 w-3.5" /></button>
+            <a href={`tel:${t.phone}`} className="p-2 rounded-md bg-danger/10 text-danger"><Phone className="h-3.5 w-3.5" /></a>
           </ActionCard>
         ))}
       </Section>

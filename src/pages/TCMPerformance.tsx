@@ -3,8 +3,10 @@ import { MetricCard } from '@/components/MetricCard';
 import { CalendarCheck, TrendingUp, FileText } from 'lucide-react';
 
 export default function TCMPerformance() {
-  const { tours } = useAppState();
-  const myTours = tours.filter(t => t.assignedTo === 'm5' || t.assignedTo === 'm6');
+  const { tours, currentMemberId } = useAppState();
+  const myTours = currentMemberId
+    ? tours.filter(t => t.assignedTo === currentMemberId)
+    : tours.filter(t => t.assignedTo === 'm5' || t.assignedTo === 'm6');
   const completed = myTours.filter(t => t.status === 'completed').length;
   const showUps = myTours.filter(t => t.showUp === true).length;
   const drafts = myTours.filter(t => t.outcome === 'draft').length;
