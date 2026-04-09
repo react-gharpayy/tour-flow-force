@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarPlus, Users, FileText, BarChart3,
-  Building2, Menu, X, ChevronLeft, ChevronRight
+  Building2, Menu, X, ChevronLeft, ChevronRight, Target, TrendingUp,
+  Trophy, Wallet
 } from 'lucide-react';
 import { useAppState } from '@/lib/app-context';
 import { cn } from '@/lib/utils';
@@ -13,11 +14,15 @@ const navItems = {
     { label: 'Team', path: '/team', icon: Users },
     { label: 'Zones', path: '/zones', icon: BarChart3 },
     { label: 'Drafts', path: '/drafts', icon: FileText },
-    { label: 'All Tours', path: '/tours', icon: CalendarPlus },
+    { label: 'Tours', path: '/tours', icon: CalendarPlus },
+    { label: 'Funnel', path: '/funnel', icon: TrendingUp },
+    { label: 'Leaderboard', path: '/leaderboard', icon: Trophy },
+    { label: 'Bookings', path: '/bookings', icon: Wallet },
   ],
   'flow-ops': [
     { label: 'Dashboard', path: '/flow-ops', icon: LayoutDashboard },
     { label: 'Schedule', path: '/schedule', icon: CalendarPlus },
+    { label: 'Leads', path: '/leads', icon: Target },
     { label: 'My Tours', path: '/tours', icon: BarChart3 },
   ],
   tcm: [
@@ -38,7 +43,6 @@ export function AppSidebar() {
 
   const items = navItems[currentRole];
 
-  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   return (
@@ -69,7 +73,7 @@ export function AppSidebar() {
 
       {/* Desktop sidebar */}
       <aside className={cn(
-        'hidden md:flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300 shrink-0',
+        'hidden md:flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300 shrink-0 sticky top-0',
         collapsed ? 'w-16' : 'w-56'
       )}>
         <div className="flex items-center gap-2 px-4 h-14 border-b border-border">
@@ -120,7 +124,7 @@ export function AppSidebar() {
         </button>
       </aside>
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav — show first 5 items */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar border-t border-border">
         <div className="flex justify-around items-center h-14">
           {items.slice(0, 5).map(item => {
@@ -166,7 +170,7 @@ function MobileNavContent({ currentRole, setCurrentRole, items, location }: any)
           ))}
         </div>
       </div>
-      <nav className="flex-1 px-2 py-2 space-y-0.5">
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
         {items.map((item: any) => {
           const active = location.pathname === item.path;
           return (

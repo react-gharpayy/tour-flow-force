@@ -83,3 +83,49 @@ export interface MemberPerformance {
   closures: number;
   sameDayRate: number;
 }
+
+// MYT Lead Tracker
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'tour-scheduled' | 'dead';
+
+export interface Lead {
+  id: string;
+  name: string;
+  phone: string;
+  area: string;
+  budget: number;
+  moveInDate: string;
+  dateConfirmed: boolean;
+  status: LeadStatus;
+  mytQualified: boolean;
+  addedBy: string;
+  addedByName: string;
+  createdAt: string;
+  notes: string;
+}
+
+// Bookings
+export type AgreementStatus = 'pending' | 'signed' | 'moved-in';
+
+export interface Booking {
+  id: string;
+  leadName: string;
+  phone: string;
+  propertyName: string;
+  area: string;
+  rentValue: number;
+  viaTour: boolean;
+  tourId: string | null;
+  agreementStatus: AgreementStatus;
+  closedBy: string;
+  closedByName: string;
+  createdAt: string;
+}
+
+// Cycle Tracker
+export interface CycleData {
+  cycleNumber: number;
+  chatsClosed: number;
+  mytLeads: number;
+  toursScheduled: number;
+  sameDayConfirmed: number;
+}

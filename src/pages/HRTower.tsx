@@ -3,14 +3,15 @@ import { useAppState } from '@/lib/app-context';
 import { MetricCard } from '@/components/MetricCard';
 import { HourlyHeatmap } from '@/components/HourlyHeatmap';
 import { DateRangeToggle } from '@/components/DateRangeToggle';
+import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { StatusBadge, OutcomeBadge } from '@/components/StatusBadge';
-import { getZonePerformance } from '@/lib/mock-data';
+import { getZonePerformance, filterToursByDateRange } from '@/lib/mock-data';
 import { DateRange } from '@/lib/types';
 import { CalendarCheck, Users, TrendingUp, FileText, AlertTriangle, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function HRTower() {
-  const { tours } = useAppState();
+  const { tours, globalZoneFilter } = useAppState();
   const [dateRange, setDateRange] = useState<DateRange>('today');
   const [, setTick] = useState(0);
 
@@ -19,21 +20,25 @@ export default function HRTower() {
     return () => clearInterval(interval);
   }, []);
 
-  const total = tours.length;
-  const completed = tours.filter(t => t.status === 'completed').length;
-  const showUps = tours.filter(t => t.showUp === true).length;
+  // Apply filters
+  let filtered = filterToursByDateRange(tours, dateRange);
+  if (globalZoneFilter) filtered = filtered.filter(t => t.zoneId === globalZoneFilter);
+
+  const total = filtered.length;
+  const completed = filtered.filter(t => t.status === 'completed').length;
+  const showUps = filtered.filter(t => t.showUp === true).length;
   const showUpRate = total > 0 ? Math.round((showUps / total) * 100) : 0;
-  const noShows = tours.filter(t => t.showUp === false).length;
-  const drafts = tours.filter(t => t.outcome === 'draft').length;
-  const sameDayTours = tours.filter(t => t.tourDate === new Date().toISOString().split('T')[0]).length;
+  const noShows = filtered.filter(t => t.showUp === false).length;
+  const drafts = filtered.filter(t => t.outcome === 'draft').length;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const sameDayTours = filtered.filter(t => t.tourDate === todayStr).length;
   const sameDayRate = total > 0 ? Math.round((sameDayTours / total) * 100) : 0;
   const draftRate = completed > 0 ? Math.round((drafts / completed) * 100) : 0;
 
-  const zonePerf = getZonePerformance(tours);
+  const zonePerf = getZonePerformance(filtered);
 
-  // Property performance
   const propertyMap = new Map<string, { tours: number; showUps: number; drafts: number }>();
-  tours.forEach(t => {
+  filtered.forEach(t => {
     const p = propertyMap.get(t.propertyName) || { tours: 0, showUps: 0, drafts: 0 };
     p.tours++;
     if (t.showUp) p.showUps++;
@@ -44,13 +49,11 @@ export default function HRTower() {
     .map(([name, d]) => ({ name, ...d, conversion: d.tours > 0 ? Math.round((d.drafts / d.tours) * 100) : 0 }))
     .sort((a, b) => b.drafts - a.drafts);
 
-  // Red flags
-  const noUpdates = tours.filter(t => t.status === 'completed' && !t.outcome);
+  const noUpdates = filtered.filter(t => t.status === 'completed' && !t.outcome);
   const highNoShow = noShows > total * 0.3;
 
   return (
     <div className="space-y-4 md:space-y-6 animate-slide-up">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">HR Control Tower</h1>
@@ -59,7 +62,9 @@ export default function HRTower() {
         <DateRangeToggle value={dateRange} onChange={setDateRange} />
       </div>
 
-      {/* Core Metrics — scrollable on mobile */}
+      {/* Notifications */}
+      <NotificationsPanel />
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
         <MetricCard label="Scheduled" value={total} color="blue" icon={<CalendarCheck className="h-4 w-4" />} />
         <MetricCard label="Completed" value={completed} color="green" icon={<Users className="h-4 w-4" />} />
@@ -68,7 +73,6 @@ export default function HRTower() {
         <MetricCard label="Draft %" value={`${draftRate}%`} color="amber" icon={<FileText className="h-4 w-4" />} />
       </div>
 
-      {/* Red Flags */}
       {(noUpdates.length > 0 || highNoShow) && (
         <div className="glass-card p-3 md:p-4 border-danger/30">
           <div className="flex items-center gap-2 mb-2">
@@ -82,7 +86,6 @@ export default function HRTower() {
         </div>
       )}
 
-      {/* Heatmap + Zones — stacked on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
         <HourlyHeatmap />
         <div className="glass-card p-3 md:p-5">
@@ -114,7 +117,6 @@ export default function HRTower() {
         </div>
       </div>
 
-      {/* Property Performance */}
       <div className="glass-card p-3 md:p-5">
         <div className="flex items-center gap-2 mb-3">
           <Building className="h-4 w-4 text-muted-foreground" />
@@ -146,13 +148,10 @@ export default function HRTower() {
         </div>
       </div>
 
-      {/* Live Activity — card layout on mobile */}
       <div className="glass-card p-3 md:p-5">
         <h3 className="font-heading font-semibold text-xs md:text-sm mb-3 text-foreground">Live Activity</h3>
-        
-        {/* Mobile cards */}
         <div className="md:hidden space-y-2">
-          {tours.slice(0, 10).map(t => (
+          {filtered.slice(0, 10).map(t => (
             <div key={t.id} className="bg-surface-2/50 rounded-lg p-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-foreground text-sm">{t.leadName}</span>
@@ -166,8 +165,6 @@ export default function HRTower() {
             </div>
           ))}
         </div>
-
-        {/* Desktop table */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -181,7 +178,7 @@ export default function HRTower() {
               </tr>
             </thead>
             <tbody>
-              {tours.slice(0, 15).map(t => (
+              {filtered.slice(0, 15).map(t => (
                 <tr key={t.id} className="border-b border-border/50 hover:bg-accent/30 transition-colors">
                   <td className="py-2 text-muted-foreground">{t.tourTime}</td>
                   <td className="py-2 font-medium text-foreground">{t.leadName}</td>
